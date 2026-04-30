@@ -1,4 +1,4 @@
-export { getUsers, createUser, updateUser, deleteUser } from "./controllers.js";
+import { getUsers, createUser, updateUser, deleteUser } from "./controllers.js";
 
 const argv = process.argv;
 const params = argv.slice(2);
@@ -6,12 +6,13 @@ const operacion = params[0];
 let resultado;
 
 // La variable "resultado" se reasigna según lo que retorna cada función
+
 switch (operacion) {
   case "get":
     resultado = getUsers();
     break;
   case "add":
-    resultado = createUser();
+    resultado = createUser(params[1], params[2], params[3]);
     break;
   case "update":
     resultado = updateUser();
