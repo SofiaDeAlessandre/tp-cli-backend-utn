@@ -1,5 +1,6 @@
 import { db } from "./config.js";
 import crypto from "node:crypto";
+import bcrypt from "bcrypt";
 
 // Funciones que controlan "La lógica de negocio":
 
@@ -39,19 +40,22 @@ const createUser = async (username, email, password) => {
     return "La contraseña debe tener al menos una mayúscula y máximo 8 caracteres";
   }
 
-  const q = `INSERT INTO users (id, username, email, password) VALUES (?,?,?,?)`;
+const hashedPassword = await bcrypt.hash(password, 10);
 
-  const [response] = await db.query(q, [
-    crypto.randomUUID(),
-    username,
-    email,
-    password,
-  ]); // Devuelve un array, por ese motivo se realiza destructuring
+const q = `INSERT INTO users (id, username, email, password) VALUES (?,?,?,?)`;
 
-  if (response.serverStatus === 2) {
+const [response] = await db.query(q, [
+  crypto.randomUUID(),
+  username,
+  email,
+  hashedPassword
+]); // Devuelve un array, por ese motivo se realiza destructuring
+
+  if (response.affectedRows === 1) {
     return "Usuario creado exitosamente";
   }
-  return newUser;
+
+  return "Error al crear usuario";
 };
 
 // Función para actualizar un usuario específico mediante su ID
@@ -61,8 +65,20 @@ const updateUser = async (id, updates) => {
     return "ID requerido";
   }
   const q = `UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?`;
-  const { username, email, password } = updates; // Destructuring del objeto
-  const [response] = await db.query(q, [username, email, password, id]);
+  const { username, email, password } = updates;
+
+let hashedPassword = password;
+
+if (password) {
+  hashedPassword = await bcrypt.hash(password, 10);
+}
+
+const [response] = await db.query(q, [
+  username,
+  email,
+  hashedPassword,
+  id
+]);
 
   if (response.affectedRows === 0) {
     return "Usuario no encontrado";
@@ -79,9 +95,11 @@ const deleteUser = async (id) => {
   }
   const [response] = await db.query(q, [id]);
 
-  if (response.serverStatus === 2) {
-    return "Usuario borrado con éxito";
+  if (response.affectedRows === 0) {
+    return "Usuario no encontrado";
   }
+
+  return "Usuario borrado con éxito";
 };
 
 export { getUsers, createUser, updateUser, deleteUser };
