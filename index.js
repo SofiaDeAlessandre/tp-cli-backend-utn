@@ -9,16 +9,21 @@ let resultado;
 
 switch (operacion) {
   case "get":
-    resultado = getUsers();
+    resultado = await getUsers();
     break;
   case "add":
-    resultado = createUser(params[1], params[2], params[3]);
+    resultado = await createUser(params[1], params[2], params[3]);
     break;
   case "update":
-    resultado = updateUser();
+    const updates = {
+      username: params[1],
+      email: params[2],
+      password: params[3],
+    };
+    resultado = await updateUser(params[4], updates);
     break;
   case "delete":
-    resultado = deleteUser();
+    resultado = await deleteUser(params[1]);
     break;
   default:
     resultado = "Operación inválida";
